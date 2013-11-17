@@ -1,4 +1,5 @@
-order-generator
+Order Generator
 ===============
 
-Refactoring example based on Ralf Baumann's example
+Alternative approach to Ralf Baumann's refactoring example based on his [blog series]
+(http://easyrequirement.blogspot.de/2013/06/reengineering-die-analyse-des-altcodes.html)
