@@ -1,5 +1,5 @@
 public class BgControls {
-	public static void forecast(long customer, String month)
+	public void forecast(long customer, String month)
 		throws BestellException
 	{
 		if (customer == Util.UNDEFINED)
@@ -8,7 +8,7 @@ public class BgControls {
 			System.out.printf("Erzeuge Forecast für Kunde Nr. %d, Monat %s ...%n", customer, month);
 	}
 
-	public static void calculation(long customer, String month)
+	public void calculation(long customer, String month)
 		throws BestellException
 	{
 		if (customer == Util.UNDEFINED)

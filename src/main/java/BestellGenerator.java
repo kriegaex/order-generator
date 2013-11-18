@@ -3,12 +3,23 @@
  * Generierung von Bestellungen für das Gesamtsystem.
  */
 public class BestellGenerator {
+	private String[] args;
+	private BgControls bgControls;
+
+	BestellGenerator(String[] args, BgControls bgControls) {
+		this.args = args;
+		this.bgControls = bgControls;
+	}
 
 	/**
 	 * Main Methode - liest die Kommandozeilenparameter und
 	 * startet den Bestellgenerator
 	 */
 	public static void main(String[] args) {
+		new BestellGenerator(args, new BgControls()).processArgs();
+	}
+
+	void processArgs() {
 		int useCase = GemeinsameKonstanten.CALCULATION_TYPE;
 		long customer = Util.UNDEFINED;
 		String month = "";
@@ -103,9 +114,9 @@ public class BestellGenerator {
 
 		try {
 			if (useCase == GemeinsameKonstanten.FORECAST_TYPE) {
-				BgControls.forecast(customer, month);
+				bgControls.forecast(customer, month);
 			} else {
-				BgControls.calculation(customer, month);
+				bgControls.calculation(customer, month);
 			}
 		} catch (BestellException e) {
 			System.out.println(e);
