@@ -1,38 +1,34 @@
 /**
- * Haupteinstiegspunkt des Bestellgenerators zur 
- * Generierung von Bestellungen für das Gesamtsystem.
+ * Command line interface (CLI) for generating calculations and forecasts
+ * per customer and per month
  */
-public class BestellGenerator {
+public class OrderGenerator {
 	private String[] args;
-	private BgControls bgControls;
+	private OrderAggregator orderAggregator;
 
-	BestellGenerator(String[] args, BgControls bgControls) {
+	OrderGenerator(String[] args, OrderAggregator orderAggregator) {
 		this.args = args;
-		this.bgControls = bgControls;
+		this.orderAggregator = orderAggregator;
 	}
 
-	/**
-	 * Main Methode - liest die Kommandozeilenparameter und
-	 * startet den Bestellgenerator
-	 */
 	public static void main(String[] args) {
-		new BestellGenerator(args, new BgControls()).processArgs();
+		new OrderGenerator(args, new OrderAggregator()).processArgs();
 	}
 
 	void processArgs() {
-		int useCase = GemeinsameKonstanten.CALCULATION_TYPE;
-		long customer = Util.UNDEFINED;
+		int aggregatorMode = Constants.CALCULATION_MODE;
+		long customer = Constants.UNDEFINED;
 		String month = "";
 
 		try {
 			if (args.length == 0) {
 				System.out.println("Starte Bg fuer alle Kunden.");
 			} else if (args.length == 1) {
-				if (GemeinsameKonstanten.FORECAST_PARAM.equalsIgnoreCase(args[0])) {
-					useCase = GemeinsameKonstanten.FORECAST_TYPE;
+				if (Constants.FORECAST_FLAG.equalsIgnoreCase(args[0])) {
+					aggregatorMode = Constants.FORECAST_MODE;
 					System.out.println("Starte Vorhersage fuer alle Kunden.");
 				} else {
-					useCase = GemeinsameKonstanten.CALCULATION_TYPE;
+					aggregatorMode = Constants.CALCULATION_MODE;
 					System.out.println("Starte Bg fuer alle Kunden.");
 				}
 			} else if (args.length == 2) {
@@ -41,11 +37,11 @@ public class BestellGenerator {
 					if (customer < 0) {
 						throw new NumberFormatException();
 					}
-					useCase = GemeinsameKonstanten.CALCULATION_TYPE;
+					aggregatorMode = Constants.CALCULATION_MODE;
 					System.out.println("Starte Bg fuer Kunden: " + customer);
 				} else if("-month".equals(args[0])) {
 					month = args[1];
-					useCase = GemeinsameKonstanten.CALCULATION_TYPE;
+					aggregatorMode = Constants.CALCULATION_MODE;
 					System.out.println("Starte Bg fuer alle Kunden.");
 				} else {
 					throw new NumberFormatException();
@@ -56,20 +52,20 @@ public class BestellGenerator {
 					if (customer < 0) {
 						throw new NumberFormatException();
 					}
-					if (GemeinsameKonstanten.FORECAST_PARAM.equalsIgnoreCase(args[2])) {
-						useCase = GemeinsameKonstanten.FORECAST_TYPE;
+					if (Constants.FORECAST_FLAG.equalsIgnoreCase(args[2])) {
+						aggregatorMode = Constants.FORECAST_MODE;
 						System.out.println("Starte Vorhersage fuer Kunden: " + customer);
 					} else {
-						useCase = GemeinsameKonstanten.CALCULATION_TYPE;
+						aggregatorMode = Constants.CALCULATION_MODE;
 						System.out.println("Starte Bg fuer Kunden: " + customer);
 					}
 				} else if("-month".equals(args[0])) {
 					month = args[1];
-					if (GemeinsameKonstanten.FORECAST_PARAM.equalsIgnoreCase(args[2])) {
-						useCase = GemeinsameKonstanten.FORECAST_TYPE;
+					if (Constants.FORECAST_FLAG.equalsIgnoreCase(args[2])) {
+						aggregatorMode = Constants.FORECAST_MODE;
 						System.out.println("Starte Vorhersage fuer alle Kunden.");
 					} else {
-						useCase = GemeinsameKonstanten.CALCULATION_TYPE;
+						aggregatorMode = Constants.CALCULATION_MODE;
 						System.out.println("Starte Bg fuer alle Kunden.");
 					}
 				}
@@ -96,11 +92,11 @@ public class BestellGenerator {
 					if (customer < 0) {
 						throw new NumberFormatException();
 					}
-					if (GemeinsameKonstanten.FORECAST_PARAM.equalsIgnoreCase(args[4])) {
-						useCase = GemeinsameKonstanten.FORECAST_TYPE;
+					if (Constants.FORECAST_FLAG.equalsIgnoreCase(args[4])) {
+						aggregatorMode = Constants.FORECAST_MODE;
 						System.out.println("Starte Vorhersage fuer Kunden: " + customer);
 					} else {
-						useCase = GemeinsameKonstanten.CALCULATION_TYPE;
+						aggregatorMode = Constants.CALCULATION_MODE;
 						System.out.println("Starte Bg fuer Kunden: " + customer);
 					}
 				}
@@ -108,17 +104,17 @@ public class BestellGenerator {
 				throw new NumberFormatException();
 			}
 		} catch (NumberFormatException e) {
-			System.out.println("usage: run [-customer customernr] [" + GemeinsameKonstanten.FORECAST_PARAM + "] \n");
+			System.out.println("usage: run [-customer customernr] [" + Constants.FORECAST_FLAG + "] \n");
 			System.exit(1);
 		}
 
 		try {
-			if (useCase == GemeinsameKonstanten.FORECAST_TYPE) {
-				bgControls.forecast(customer, month);
+			if (aggregatorMode == Constants.FORECAST_MODE) {
+				orderAggregator.forecast(customer, month);
 			} else {
-				bgControls.calculation(customer, month);
+				orderAggregator.calculation(customer, month);
 			}
-		} catch (BestellException e) {
+		} catch (OrderException e) {
 			System.out.println(e);
 		}
 		System.out.println("Bg-Lauf beendet.");
