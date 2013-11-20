@@ -53,7 +53,7 @@ public class OrderGenerator {
 
 	private void printUsageAndExit(int exitCode) {
 		System.out.printf("Usage: %s [%s <customer ID>] [%s <month>] [%s]%n",
-			this.getClass().getSimpleName(),
+			this.getClass().getSimpleName().replaceFirst("\\$.*", ""),
 			Constants.CUSTOMER_FLAG,
 			Constants.MONTH_FLAG,
 			Constants.FORECAST_FLAG
