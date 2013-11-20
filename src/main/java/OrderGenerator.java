@@ -34,7 +34,6 @@ public class OrderGenerator {
 		try {
 			int optionIndex;
 			if ((optionIndex = args.indexOf(Constants.CUSTOMER_FLAG)) != -1) {
-				System.out.println(optionIndex);
 				customer = Integer.parseInt(args.get(1 + optionIndex));
 				if (customer < 1)
 					throw new NumberFormatException("customer ID must be > 0");
