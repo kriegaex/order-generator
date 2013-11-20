@@ -1,4 +1,7 @@
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Vector;
 
 /**
@@ -9,120 +12,55 @@ public class OrderGenerator {
 	private Vector<String> args;
 	private OrderAggregator orderAggregator;
 
+	static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM");
+	static final String CURRENT_MONTH = DATE_FORMAT.format(new Date());
+
 	OrderGenerator(String[] args, OrderAggregator orderAggregator) {
 		this.args = new Vector<>(args.length);
 		Collections.addAll(this.args, args);
 		this.orderAggregator = orderAggregator;
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws OrderException {
 		new OrderGenerator(args, new OrderAggregator()).processArgs();
 	}
 
-	void processArgs() {
-		int aggregatorMode = Constants.CALCULATION_MODE;
-		long customer = Constants.UNDEFINED;
-		String month = "";
-
+	void processArgs() throws OrderException {
+		boolean forecastMode = args.contains(Constants.FORECAST_FLAG);
+		long customer = Constants.ALL_CUSTOMERS;
+		String month = CURRENT_MONTH;
 		try {
-			if (args.size() == 0) {
-				System.out.println("Starte Bg fuer alle Kunden.");
-			} else if (args.size() == 1) {
-				if (Constants.FORECAST_FLAG.equalsIgnoreCase(args.get(0))) {
-					aggregatorMode = Constants.FORECAST_MODE;
-					System.out.println("Starte Vorhersage fuer alle Kunden.");
-				} else {
-					aggregatorMode = Constants.CALCULATION_MODE;
-					System.out.println("Starte Bg fuer alle Kunden.");
-				}
-			} else {
-				if (args.size() == 2) {
-					if(Constants.CUSTOMER_FLAG.equals(args.get(0))) {
-						customer = Integer.parseInt(args.get(1));
-						if (customer < 0) {
-							throw new NumberFormatException();
-						}
-						aggregatorMode = Constants.CALCULATION_MODE;
-						System.out.println("Starte Bg fuer Kunden: " + customer);
-					} else if(Constants.MONTH_FLAG.equals(args.get(0))) {
-						month = args.get(1);
-						aggregatorMode = Constants.CALCULATION_MODE;
-						System.out.println("Starte Bg fuer alle Kunden.");
-					} else {
-						throw new NumberFormatException();
-					}
-				} else if (args.size() == 3) {
-					if(Constants.CUSTOMER_FLAG.equals(args.get(0))) {
-						customer = Integer.parseInt(args.get(1));
-						if (customer < 0) {
-							throw new NumberFormatException();
-						}
-						if (Constants.FORECAST_FLAG.equalsIgnoreCase(args.get(2))) {
-							aggregatorMode = Constants.FORECAST_MODE;
-							System.out.println("Starte Vorhersage fuer Kunden: " + customer);
-						} else {
-							aggregatorMode = Constants.CALCULATION_MODE;
-							System.out.println("Starte Bg fuer Kunden: " + customer);
-						}
-					} else if(Constants.MONTH_FLAG.equals(args.get(0))) {
-						month = args.get(1);
-						if (Constants.FORECAST_FLAG.equalsIgnoreCase(args.get(2))) {
-							aggregatorMode = Constants.FORECAST_MODE;
-							System.out.println("Starte Vorhersage fuer alle Kunden.");
-						} else {
-							aggregatorMode = Constants.CALCULATION_MODE;
-							System.out.println("Starte Bg fuer alle Kunden.");
-						}
-					}
-				} else if(args.size() == 4) {
-					if(Constants.CUSTOMER_FLAG.equals(args.get(0)) && Constants.MONTH_FLAG.equals(args.get(2))) {
-						customer = Integer.parseInt(args.get(1));
-						if (customer < 0) {
-							throw new NumberFormatException();
-						}
-						month = args.get(3);
-						System.out.println("Starte Bg fuer Kunden: " + customer);
-					} else if(Constants.CUSTOMER_FLAG.equals(args.get(2)) && Constants.MONTH_FLAG.equals(args.get(0))) {
-						customer = Integer.parseInt(args.get(3));
-						if (customer < 0) {
-							throw new NumberFormatException();
-						}
-						month = args.get(1);
-						System.out.println("Starte Bg fuer Kunden: " + customer);
-					}
-				} else if (args.size() == 5) {
-					if(Constants.CUSTOMER_FLAG.equals(args.get(2)) && Constants.MONTH_FLAG.equals(args.get(0))) {
-						month = args.get(1);
-						customer = Integer.parseInt(args.get(3));
-						if (customer < 0) {
-							throw new NumberFormatException();
-						}
-						if (Constants.FORECAST_FLAG.equalsIgnoreCase(args.get(4))) {
-							aggregatorMode = Constants.FORECAST_MODE;
-							System.out.println("Starte Vorhersage fuer Kunden: " + customer);
-						} else {
-							aggregatorMode = Constants.CALCULATION_MODE;
-							System.out.println("Starte Bg fuer Kunden: " + customer);
-						}
-					}
-				} else {
-					throw new NumberFormatException();
-				}
+			if (args.contains(Constants.CUSTOMER_FLAG)) {
+				customer = Integer.parseInt(args.get(1 + args.indexOf(Constants.CUSTOMER_FLAG)));
+				if (customer < 1)
+					throw new NumberFormatException("customer ID must be > 0");
 			}
-		} catch (NumberFormatException e) {
-			System.out.println("usage: run [-customer customernr] [" + Constants.FORECAST_FLAG + "] \n");
-			System.exit(1);
+			if (args.contains(Constants.MONTH_FLAG)) {
+				DATE_FORMAT.setLenient(false);
+				month = DATE_FORMAT.format(DATE_FORMAT.parse(args.get(1 + args.indexOf(Constants.MONTH_FLAG))));
+			}
 		}
+		catch (NumberFormatException | ParseException e) {
+			printUsageAndExit(1);
+		}
+		System.out.println("Starte Bestellgenerator ...");
+		if (forecastMode)
+			orderAggregator.forecast(customer, month);
+		else
+			orderAggregator.calculation(customer, month);
+		System.out.println("Bestellgenerator-Lauf erfolgreich beendet ...");
+	}
 
-		try {
-			if (aggregatorMode == Constants.FORECAST_MODE) {
-				orderAggregator.forecast(customer, month);
-			} else {
-				orderAggregator.calculation(customer, month);
-			}
-		} catch (OrderException e) {
-			System.out.println(e);
-		}
-		System.out.println("Bg-Lauf beendet.");
+	private void printUsageAndExit(int exitCode) {
+		System.out.printf("Usage: %s [%s <customer ID>] [%s <month>] [%s]%n",
+			this.getClass().getSimpleName(),
+			Constants.CUSTOMER_FLAG,
+			Constants.MONTH_FLAG,
+			Constants.FORECAST_FLAG
+		);
+		System.out.println("  * parameter order is variable, unknown parameters will be ignored");
+		System.out.println("  * customer ID must be > 0");
+		System.out.println("  * month format is yyyy-MM, range is not checked");
+		System.exit(exitCode);
 	}
 }

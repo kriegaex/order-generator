@@ -11,7 +11,11 @@ class OrderGeneratorTest extends Specification {
 	@Rule
 	ExpectedSystemExit exitRule = ExpectedSystemExit.none();
 
-	final static def FORECAST_MODE = Constants.FORECAST_FLAG
+	final static def CURRENT_MONTH = OrderGenerator.CURRENT_MONTH
+	final static def ALL_CUSTOMERS = Constants.ALL_CUSTOMERS
+	final static def CUSTOMER_FLAG = Constants.CUSTOMER_FLAG
+	final static def MONTH_FLAG = Constants.MONTH_FLAG
+	final static def FORECAST_FLAG = Constants.FORECAST_FLAG
 
 	@Unroll
 	def "Calculation #args"(String[] args, long customer, String month) {
@@ -23,37 +27,21 @@ class OrderGeneratorTest extends Specification {
 		1 * bgControls.calculation(customer, month)
 		0 * bgControls.forecast(_)
 		where:
-		// TODO: define what should happen if exactly one parameter != '-forecast' is given
-		// TODO: define format for month parameter, currently anything is allowed
-		args                                     | customer            | month
-		[]                                       | Constants.UNDEFINED | ""
-		[""]                                     | Constants.UNDEFINED | ""
-		["foo"]                                  | Constants.UNDEFINED | ""
-		["-customer", "1"]                       | 1                   | ""
-		["-customer", "1", "-month", "my_month"] | 1                   | "my_month"
-		["-customer", "1", "-month", "May"]      | 1                   | "May"
-		["-customer", "1", "-month", "5"]        | 1                   | "5"
-		["-customer", "1", "-month", "05"]       | 1                   | "05"
-		["-customer", "1", "-month", "05/2013"]  | 1                   | "05/2013"
-		["-customer", "1", "-month", "05-2013"]  | 1                   | "05-2013"
-		["-customer", "1", "-month", "2013/05"]  | 1                   | "2013/05"
-		["-customer", "1", "-month", "2013-05"]  | 1                   | "2013-05"
-		["-month", "my_month", "-customer", "1"] | 1                   | "my_month"
-		["-month", "May", "-customer", "1"]      | 1                   | "May"
-		["-month", "5", "-customer", "1"]        | 1                   | "5"
-		["-month", "05", "-customer", "1"]       | 1                   | "05"
-		["-month", "05/2013", "-customer", "1"]  | 1                   | "05/2013"
-		["-month", "05-2013", "-customer", "1"]  | 1                   | "05-2013"
-		["-month", "2013/05", "-customer", "1"]  | 1                   | "2013/05"
-		["-month", "2013-05", "-customer", "1"]  | 1                   | "2013-05"
-		["-month", "my_month"]                   | Constants.UNDEFINED | "my_month"
-		["-month", "May"]                        | Constants.UNDEFINED | "May"
-		["-month", "5"]                          | Constants.UNDEFINED | "5"
-		["-month", "05"]                         | Constants.UNDEFINED | "05"
-		["-month", "05/2013"]                    | Constants.UNDEFINED | "05/2013"
-		["-month", "05-2013"]                    | Constants.UNDEFINED | "05-2013"
-		["-month", "2013/05"]                    | Constants.UNDEFINED | "2013/05"
-		["-month", "2013-05"]                    | Constants.UNDEFINED | "2013-05"
+		args                                               | customer      | month
+		[]                                                 | ALL_CUSTOMERS | CURRENT_MONTH
+		[CUSTOMER_FLAG, "-1111"]                               | 1             | CURRENT_MONTH //#####
+		[CUSTOMER_FLAG, "1"]                               | 1             | CURRENT_MONTH
+		[CUSTOMER_FLAG, "1", MONTH_FLAG, "2013-05"]        | 1             | "2013-05"
+		[MONTH_FLAG, "2013-05", CUSTOMER_FLAG, "1"]        | 1             | "2013-05"
+		[MONTH_FLAG, "2013-05"]                            | ALL_CUSTOMERS | "2013-05"
+		[""]                                               | ALL_CUSTOMERS | CURRENT_MONTH
+		["foo"]                                            | ALL_CUSTOMERS | CURRENT_MONTH
+		[CUSTOMER_FLAG, "1", "foo"]                        | 1             | CURRENT_MONTH
+		[CUSTOMER_FLAG, "1", "foo", MONTH_FLAG, "2013-05"] | 1             | "2013-05"
+		[MONTH_FLAG, "2013-05", "foo", CUSTOMER_FLAG, "1"] | 1             | "2013-05"
+		["foo", MONTH_FLAG, "2013-05", "bar"]              | ALL_CUSTOMERS | "2013-05"
+		["foo", "bar", "zot", "baz", "bla", "moo"]         | ALL_CUSTOMERS | CURRENT_MONTH
+
 	}
 
 	@Unroll
@@ -66,26 +54,15 @@ class OrderGeneratorTest extends Specification {
 		1 * bgControls.forecast(customer, month)
 		0 * bgControls.calculation(_)
 		where:
-		// TODO: for 3/5 parameters permit variable parameter order like for 4
-		args                                                    | customer            | month
-		[FORECAST_MODE]                                         | Constants.UNDEFINED | ""
-		["-customer", "1", FORECAST_MODE]                       | 1                   | ""
-		["-month", "my_month", "-customer", "1", FORECAST_MODE] | 1                   | "my_month"
-		["-month", "May", "-customer", "1", FORECAST_MODE]      | 1                   | "May"
-		["-month", "5", "-customer", "1", FORECAST_MODE]        | 1                   | "5"
-		["-month", "05", "-customer", "1", FORECAST_MODE]       | 1                   | "05"
-		["-month", "05/2013", "-customer", "1", FORECAST_MODE]  | 1                   | "05/2013"
-		["-month", "05-2013", "-customer", "1", FORECAST_MODE]  | 1                   | "05-2013"
-		["-month", "2013/05", "-customer", "1", FORECAST_MODE]  | 1                   | "2013/05"
-		["-month", "2013-05", "-customer", "1", FORECAST_MODE]  | 1                   | "2013-05"
-		["-month", "my_month", FORECAST_MODE]                   | Constants.UNDEFINED | "my_month"
-		["-month", "May", FORECAST_MODE]                        | Constants.UNDEFINED | "May"
-		["-month", "5", FORECAST_MODE]                          | Constants.UNDEFINED | "5"
-		["-month", "05", FORECAST_MODE]                         | Constants.UNDEFINED | "05"
-		["-month", "05/2013", FORECAST_MODE]                    | Constants.UNDEFINED | "05/2013"
-		["-month", "05-2013", FORECAST_MODE]                    | Constants.UNDEFINED | "05-2013"
-		["-month", "2013/05", FORECAST_MODE]                    | Constants.UNDEFINED | "2013/05"
-		["-month", "2013-05", FORECAST_MODE]                    | Constants.UNDEFINED | "2013-05"
+		args                                                              | customer      | month
+		[FORECAST_FLAG]                                                   | ALL_CUSTOMERS | CURRENT_MONTH
+		[CUSTOMER_FLAG, "1", FORECAST_FLAG]                               | 1             | CURRENT_MONTH
+		[MONTH_FLAG, "2013-05", CUSTOMER_FLAG, "1", FORECAST_FLAG]        | 1             | "2013-05"
+		[MONTH_FLAG, "2013-05", FORECAST_FLAG]                            | ALL_CUSTOMERS | "2013-05"
+		["foo", FORECAST_FLAG, "bar"]                                     | ALL_CUSTOMERS | CURRENT_MONTH
+		[CUSTOMER_FLAG, "1", "foo", FORECAST_FLAG]                        | 1             | CURRENT_MONTH
+		[MONTH_FLAG, "2013-05", "foo", CUSTOMER_FLAG, "1", FORECAST_FLAG] | 1             | "2013-05"
+		["foo", MONTH_FLAG, "2013-05", "bar", FORECAST_FLAG, "zot"]       | ALL_CUSTOMERS | "2013-05"
 	}
 
 	@Unroll
@@ -99,20 +76,50 @@ class OrderGeneratorTest extends Specification {
 		0 * bgControls._(_)
 		thrown(CheckExitCalled)
 		where:
-		// TODO: This should be forbidden:
-		// ["-month", "2013-05", "-customer", "1", "foo"]
-		// ["-month", "2013-05", "foo"]
-
 		args << [
-			["-customer", "foo"],
-			["-customer", "2.5"],
-			["-customer", "2,5"],
-			["-customer", "-11"],
-			["-customer", "foo", "-month", "05/2013"],
-			["-month", "05-2013", "-customer", "foo"],
-			["-month", "2013/05", "-customer", "foo", FORECAST_MODE],
-			["-month", "2013/05", "-customer", "-1", FORECAST_MODE],
-			["foo", "foo", "foo", "foo", "foo", "foo", "foo"]
+			[CUSTOMER_FLAG, "foo"],
+			[CUSTOMER_FLAG, "2.5"],
+			[CUSTOMER_FLAG, "2,5"],
+			[CUSTOMER_FLAG, "-11"],
+			[CUSTOMER_FLAG, "foo", MONTH_FLAG, "05/2013"],
+			[MONTH_FLAG, "05-2013", CUSTOMER_FLAG, "foo"],
+			[MONTH_FLAG, "2013/05", CUSTOMER_FLAG, "foo", FORECAST_FLAG],
+			[MONTH_FLAG, "2013/05", CUSTOMER_FLAG, "-1", FORECAST_FLAG],
+			[MONTH_FLAG, "my_month"],
+			[MONTH_FLAG, "May"],
+			[MONTH_FLAG, "5"],
+			[MONTH_FLAG, "05"],
+			[MONTH_FLAG, "05/2013"],
+			[MONTH_FLAG, "05-2013"],
+			[MONTH_FLAG, "2013/05"],
+			[CUSTOMER_FLAG, "1", MONTH_FLAG, "my_month"],
+			[CUSTOMER_FLAG, "1", MONTH_FLAG, "May"],
+			[CUSTOMER_FLAG, "1", MONTH_FLAG, "5"],
+			[CUSTOMER_FLAG, "1", MONTH_FLAG, "05"],
+			[CUSTOMER_FLAG, "1", MONTH_FLAG, "05/2013"],
+			[CUSTOMER_FLAG, "1", MONTH_FLAG, "05-2013"],
+			[CUSTOMER_FLAG, "1", MONTH_FLAG, "2013/05"],
+			[MONTH_FLAG, "my_month", CUSTOMER_FLAG, "1"],
+			[MONTH_FLAG, "May", CUSTOMER_FLAG, "1"],
+			[MONTH_FLAG, "5", CUSTOMER_FLAG, "1"],
+			[MONTH_FLAG, "05", CUSTOMER_FLAG, "1"],
+			[MONTH_FLAG, "05/2013", CUSTOMER_FLAG, "1"],
+			[MONTH_FLAG, "05-2013", CUSTOMER_FLAG, "1"],
+			[MONTH_FLAG, "2013/05", CUSTOMER_FLAG, "1"],
+			[MONTH_FLAG, "my_month", CUSTOMER_FLAG, "1", FORECAST_FLAG],
+			[MONTH_FLAG, "May", CUSTOMER_FLAG, "1", FORECAST_FLAG],
+			[MONTH_FLAG, "5", CUSTOMER_FLAG, "1", FORECAST_FLAG],
+			[MONTH_FLAG, "05", CUSTOMER_FLAG, "1", FORECAST_FLAG],
+			[MONTH_FLAG, "05/2013", CUSTOMER_FLAG, "1", FORECAST_FLAG],
+			[MONTH_FLAG, "05-2013", CUSTOMER_FLAG, "1", FORECAST_FLAG],
+			[MONTH_FLAG, "2013/05", CUSTOMER_FLAG, "1", FORECAST_FLAG],
+			[MONTH_FLAG, "my_month", FORECAST_FLAG],
+			[MONTH_FLAG, "May", FORECAST_FLAG],
+			[MONTH_FLAG, "5", FORECAST_FLAG],
+			[MONTH_FLAG, "05", FORECAST_FLAG],
+			[MONTH_FLAG, "05/2013", FORECAST_FLAG],
+			[MONTH_FLAG, "05-2013", FORECAST_FLAG],
+			[MONTH_FLAG, "2013/05", FORECAST_FLAG]
 		]
 	}
 }
