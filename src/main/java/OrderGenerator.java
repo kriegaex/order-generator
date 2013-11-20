@@ -29,20 +29,31 @@ public class OrderGenerator {
 		boolean forecastMode = args.contains(Constants.FORECAST_FLAG);
 		long customer = Constants.ALL_CUSTOMERS;
 		String month = CURRENT_MONTH;
+
+		args.remove(Constants.FORECAST_FLAG);
 		try {
-			if (args.contains(Constants.CUSTOMER_FLAG)) {
-				customer = Integer.parseInt(args.get(1 + args.indexOf(Constants.CUSTOMER_FLAG)));
+			int optionIndex;
+			if ((optionIndex = args.indexOf(Constants.CUSTOMER_FLAG)) != -1) {
+				System.out.println(optionIndex);
+				customer = Integer.parseInt(args.get(1 + optionIndex));
 				if (customer < 1)
 					throw new NumberFormatException("customer ID must be > 0");
+				args.removeElementAt(optionIndex);
+				args.removeElementAt(optionIndex);
 			}
-			if (args.contains(Constants.MONTH_FLAG)) {
+			if ((optionIndex = args.indexOf(Constants.MONTH_FLAG)) != -1) {
 				DATE_FORMAT.setLenient(false);
-				month = DATE_FORMAT.format(DATE_FORMAT.parse(args.get(1 + args.indexOf(Constants.MONTH_FLAG))));
+				month = DATE_FORMAT.format(DATE_FORMAT.parse(args.get(1 + optionIndex)));
+				args.removeElementAt(optionIndex);
+				args.removeElementAt(optionIndex);
 			}
+			if (args.size() > 0)
+				throw new IllegalArgumentException("unknown arguments on command line");
 		}
-		catch (NumberFormatException | ParseException e) {
+		catch (IllegalArgumentException | ParseException e) {
 			printUsageAndExit(1);
 		}
+
 		System.out.println("Starte Bestellgenerator ...");
 		if (forecastMode)
 			orderAggregator.forecast(customer, month);
@@ -58,7 +69,7 @@ public class OrderGenerator {
 			Constants.MONTH_FLAG,
 			Constants.FORECAST_FLAG
 		);
-		System.out.println("  * parameter order is variable, unknown parameters will be ignored");
+		System.out.println("  * parameter order is variable");
 		System.out.println("  * customer ID must be > 0");
 		System.out.println("  * month format is yyyy-MM, range is not checked");
 		System.exit(exitCode);
