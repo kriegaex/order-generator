@@ -29,7 +29,6 @@ class OrderGeneratorTest extends Specification {
 		where:
 		args                                               | customer      | month
 		[]                                                 | ALL_CUSTOMERS | CURRENT_MONTH
-		[CUSTOMER_FLAG, "-1111"]                               | 1             | CURRENT_MONTH //#####
 		[CUSTOMER_FLAG, "1"]                               | 1             | CURRENT_MONTH
 		[CUSTOMER_FLAG, "1", MONTH_FLAG, "2013-05"]        | 1             | "2013-05"
 		[MONTH_FLAG, "2013-05", CUSTOMER_FLAG, "1"]        | 1             | "2013-05"
