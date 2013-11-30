@@ -64,6 +64,14 @@
 					</execution>
 				</executions>
 			</plugin-->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <!--
+                    Explicitly use version >= 2.12.3 to avoid falsely escaped Unicode characters in test output.
+                    This is unnecessary for Maven 3.1.1, but necessary for Maven 3.0.5.
+                -->
+                <version>2.16</version>
+            </plugin>
 		</plugins>
 	</build>
 
